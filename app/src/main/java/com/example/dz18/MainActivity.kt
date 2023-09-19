@@ -4,21 +4,28 @@ import android.os.Bundle
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
+import androidx.lifecycle.ViewModelProvider
 
-class MainActivity : AppCompatActivity(), View {
+class MainActivity : AppCompatActivity() {
     private lateinit var button: CardView
     private lateinit var tvCount: TextView
-    private val presenter: Presenter = PresenterImpl()
+    private lateinit var viewModel: CountViewModel
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         button = findViewById(R.id.button)
         tvCount = findViewById(R.id.tv_count)
 
-        presenter.setView(this)
-        button.setOnClickListener { presenter.generateCountNumber() } }
+        viewModel = ViewModelProvider(this).get(CountViewModel::class.java)
+        viewModel.countLiveData.observe(this) {
+            tvCount.text = it
+        }
 
-    override fun updateCount(count: String) {
-        tvCount.text = count
+        button.setOnClickListener { viewModel.addCount() }
+    }
+
+    override fun onPause() {
+        super.onPause()
+        App.getApp().saveDateInPref(viewModel.countLiveData.value.toString())
     }
 }
